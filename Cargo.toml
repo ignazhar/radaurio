@@ -5,6 +5,7 @@ edition = "2021"
 
 [dependencies]
 levenberg-marquardt = "0.14.0"
+nalgebra = { version = "0.33.2" }
 plotters = "0.3.7"
 rustfft = "6.3.0"
 symphonia = { version = "0.5.4", features = ["mp3"] }

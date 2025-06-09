@@ -3,7 +3,7 @@ use std::io::Write;
 use plotters::prelude::*;
 
 // https://github.com/plotters-rs/plotters/blob/master/plotters/examples/area-chart.rs
-const OUT_FILE_NAME: &str = "plotters-doc-data/frequency-chart-try9.png";
+const OUT_FILE_NAME: &str = "plotters-doc-data/frequency-chart-try10.png";
 pub fn plot(data: Vec<f64>, caption: &str) -> Result<(), Box<dyn std::error::Error>> {
     let root = BitMapBackend::new(OUT_FILE_NAME, (1024, 768)).into_drawing_area();
 
@@ -38,6 +38,9 @@ pub fn plot(data: Vec<f64>, caption: &str) -> Result<(), Box<dyn std::error::Err
     // To avoid the IO failure being ignored silently, we manually call the present function
     root.present().expect("Unable to write result to file, please make sure 'plotters-doc-data' dir exists under current dir");
     println!("Result has been saved to {}", OUT_FILE_NAME);
+
+    // let aboba_test = 
+
     Ok(())
 }
 

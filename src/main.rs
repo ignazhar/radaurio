@@ -13,6 +13,8 @@ use symphonia::core::probe::Hint;
 pub mod plot;
 use crate::plot::{gif_plots, plot};
 
+pub mod lma;
+
 fn decode_image(file_path: &String) -> Vec<Vec<f64>> {
     // Return vector of vector samples
     let mut samples: Vec<Vec<f64>> = vec![];
