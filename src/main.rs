@@ -1,4 +1,4 @@
-use std::{env, f32::consts::E};
+use std::env;
 use std::fs::File;
 use std::path::Path;
 
@@ -11,9 +11,12 @@ use symphonia::core::meta::MetadataOptions;
 use symphonia::core::probe::Hint;
 
 pub mod plot;
+#[allow(unused_imports)]
+use crate::approx::{example_usage, one_device_approximation};
+#[allow(unused_imports)]
 use crate::plot::{gif_plots, plot};
-
-pub mod lma;
+// pub mod lma;
+pub mod approx;
 
 fn decode_image(file_path: &String) -> Vec<Vec<f64>> {
     // Return vector of vector samples
@@ -227,8 +230,11 @@ fn main() {
     // plot(total).unwrap();
     // gif_plots(spectrogram).unwrap();
 
-    let frequencies = get_frequencies(&spectrogram);
-    plot(frequencies, "Frequencies chart 1").unwrap();
+    let _frequencies = get_frequencies(&spectrogram);
+    // plot(frequencies, "Frequencies chart 1").unwrap();
+
+    // example_usage();
+    one_device_approximation(_frequencies);
 
     /* FFT tests
     let mut planner = FftPlanner::<f32>::new();
