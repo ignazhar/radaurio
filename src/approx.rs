@@ -64,12 +64,13 @@ pub fn one_device_approximation(data: Vec<f64>) -> OneDeviceSolution {
         tau0: f64,
     }
 
+    // (x0, d, v0)
     impl Problem for OneDeviceProblem {
         type Field = f64;
 
         fn domain(&self) -> Domain<Self::Field> {
             // Domain::unconstrained(2)
-            Domain::rect(vec![-100000.0, -100000.0], vec![100000.0, 100000.0])
+            Domain::rect(vec![-100000.0, -100000.0, -100000.0], vec![100000.0, 100000.0, 100000.0])
         }
     }
 
@@ -78,7 +79,7 @@ pub fn one_device_approximation(data: Vec<f64>) -> OneDeviceSolution {
         where
             Sx: na::Storage<Self::Field, Dyn> + IsContiguous,
         {
-            let (x0, v0) = (values[0], values[1]);
+            let (x0, d, v0) = (values[0], values[1], values[2]);
             let tau0 = self.tau0;
 
             // fn get_value(x: f64) -> f64 {
@@ -89,9 +90,9 @@ pub fn one_device_approximation(data: Vec<f64>) -> OneDeviceSolution {
                 let alpha = x0 + v0 * t + v0 * tau0;
                 let beta = x0 + v0 * t;
                 #[allow(non_snake_case)]
-                let A = (1.0 + alpha.powi(2)).sqrt();
+                let A = (d.powi(2) + alpha.powi(2)).sqrt();
                 #[allow(non_snake_case)]
-                let B = (1.0 + beta.powi(2)).sqrt();
+                let B = (d.powi(2) + beta.powi(2)).sqrt();
                 let nu = C / (tau0 * C + A - B);
                 nu
             };
@@ -104,7 +105,8 @@ pub fn one_device_approximation(data: Vec<f64>) -> OneDeviceSolution {
         }
     }
 
-    // nu0: f64,
+    // d
+    // nu0: f64, ///// ???
     // x0: f64,
     // v0: f64,
     // // not changeable
@@ -115,7 +117,7 @@ pub fn one_device_approximation(data: Vec<f64>) -> OneDeviceSolution {
         tau0: 1.0,
     };
     let mut optimizer = OptimizerDriver::builder(&current_problem)
-        .with_initial(vec![2000.0, 600.0])
+        .with_initial(vec![200.0, 40.0, 50.0])
         .build();
 
     fn find_return(optimizer: &mut OptimizerDriver<'_, OneDeviceProblem, gomez::algo::TrustRegion<OneDeviceProblem>>) -> GetResult {
@@ -168,5 +170,5 @@ pub fn one_device_approximation(data: Vec<f64>) -> OneDeviceSolution {
 
     println!("{}", optimizer.name());
 
-    OneDeviceSolution { x0: result.result.0[0], v0: result.result.0[1], tau0: 1.0 }
+    OneDeviceSolution { x0: result.result.0[0], d: result.result.0[1], v0: result.result.0[2], tau0: 1.0 }
 }

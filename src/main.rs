@@ -228,6 +228,7 @@ fn get_frequencies(spectrogram: &Vec<Vec<f64>>) -> Vec<f64> {
 
 pub struct OneDeviceSolution {
     x0: f64,
+    d: f64,
     v0: f64,
     tau0: f64,
 }
@@ -257,7 +258,7 @@ fn main() {
     
     // example_usage();
     let approximation = one_device_approximation(frequencies.clone());
-    plot(frequencies, Some(approximation), "Frequencies + approximation chart 3").unwrap();
+    plot(frequencies, Some(approximation), "Frequencies + approximation chart 4").unwrap();
 
     
     /* FFT tests
