@@ -45,7 +45,7 @@ pub fn example_usage() -> () {
 }
 
 // speed of sound (T = 20 degrees Celsius)
-const C: f64 = 343.0;
+pub const C: f64 = 343.0;
 
 // fn find_return(optimizer: &OptimizerDriver<'_, OneDeviceProblem, TrustRegion<OneDeviceProblem>>, initial_params: vec<f64>) {
 
@@ -69,7 +69,7 @@ pub fn one_device_approximation(data: Vec<f64>) -> OneDeviceSolution {
 
         fn domain(&self) -> Domain<Self::Field> {
             // Domain::unconstrained(2)
-            Domain::rect(vec![-100.0, 0.0], vec![100.0, 100.0])
+            Domain::rect(vec![-100000.0, -100000.0], vec![100000.0, 100000.0])
         }
     }
 
@@ -115,7 +115,7 @@ pub fn one_device_approximation(data: Vec<f64>) -> OneDeviceSolution {
         tau0: 1.0,
     };
     let mut optimizer = OptimizerDriver::builder(&current_problem)
-        .with_initial(vec![200.0, 60.0])
+        .with_initial(vec![2000.0, 600.0])
         .build();
 
     fn find_return(optimizer: &mut OptimizerDriver<'_, OneDeviceProblem, gomez::algo::TrustRegion<OneDeviceProblem>>) -> GetResult {

@@ -257,7 +257,7 @@ fn main() {
     
     // example_usage();
     let approximation = one_device_approximation(frequencies.clone());
-    plot(frequencies, Some(approximation), "Frequencies + approximation chart 1").unwrap();
+    plot(frequencies, Some(approximation), "Frequencies + approximation chart 3").unwrap();
 
     
     /* FFT tests

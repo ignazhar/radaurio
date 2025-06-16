@@ -1,11 +1,19 @@
 use std::io::Write;
 
-use plotters::prelude::*;
+use plotters::{prelude::*, style::full_palette::ORANGE};
 
-use crate::OneDeviceSolution;
+use crate::{approx::C, OneDeviceSolution};
 
 fn get_value(model: &OneDeviceSolution, t: f64) -> f64 {
-    todo!()
+    let (x0, v0, tau0) = (model.x0, model.v0, model.tau0);
+    let alpha = x0 + v0 * t + v0 * tau0;
+    let beta = x0 + v0 * t;
+    #[allow(non_snake_case)]
+    let A = (1.0 + alpha.powi(2)).sqrt();
+    #[allow(non_snake_case)]
+    let B = (1.0 + beta.powi(2)).sqrt();
+    let nu = C / (tau0 * C + A - B);
+    nu
 }
 
 fn build_approximation_graph(model: OneDeviceSolution, len: usize) -> Vec<f64> {
@@ -17,7 +25,7 @@ fn build_approximation_graph(model: OneDeviceSolution, len: usize) -> Vec<f64> {
 }
 
 // https://github.com/plotters-rs/plotters/blob/master/plotters/examples/area-chart.rs
-const OUT_FILE_NAME: &str = "plotters-doc-data/frequency-chart-with-approx-1.png";
+const OUT_FILE_NAME: &str = "plotters-doc-data/frequency-chart-with-approx-3.png";
 pub fn plot(data: Vec<f64>, optional_model: Option<OneDeviceSolution>, caption: &str) -> Result<(), Box<dyn std::error::Error>> {
     let root = BitMapBackend::new(OUT_FILE_NAME, (1024, 768)).into_drawing_area();
 
@@ -50,7 +58,16 @@ pub fn plot(data: Vec<f64>, optional_model: Option<OneDeviceSolution>, caption: 
     )?;
 
     if let Some(model) = optional_model {
-        todo!()
+        println!("Found model solution");
+        let model_data = build_approximation_graph(model, data.len());
+        chart.draw_series(
+            AreaSeries::new(
+                (0..).zip(model_data.iter()).map(|(x, y)| (x, *y)),
+                0.0,
+                ORANGE.mix(0.2),
+            )
+            .border_style(ORANGE),
+        )?;
     }
 
     // To avoid the IO failure being ignored silently, we manually call the present function
