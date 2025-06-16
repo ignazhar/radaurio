@@ -19,13 +19,13 @@ fn get_value(model: &OneDeviceSolution, t: f64) -> f64 {
 fn build_approximation_graph(model: OneDeviceSolution, len: usize) -> Vec<f64> {
     let mut graph = vec![];
     for i in 0..len {
-        graph.push(get_value(&model, i as f64));
+        graph.push(get_value(&model, i as f64 * model.tau0));
     }
     graph
 }
 
 // https://github.com/plotters-rs/plotters/blob/master/plotters/examples/area-chart.rs
-const OUT_FILE_NAME: &str = "plotters-doc-data/frequency-chart-with-approx-4.png";
+const OUT_FILE_NAME: &str = "plotters-doc-data/frequency-chart-with-approx-7.png";
 pub fn plot(data: Vec<f64>, optional_model: Option<OneDeviceSolution>, caption: &str) -> Result<(), Box<dyn std::error::Error>> {
     let root = BitMapBackend::new(OUT_FILE_NAME, (1024, 768)).into_drawing_area();
 

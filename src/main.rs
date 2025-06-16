@@ -33,7 +33,7 @@ fn get_duration(track: &symphonia::core::formats::Track) -> f64 {
     seconds
 }
 
-fn decode_image(file_path: &String) -> Vec<Vec<f64>> {
+fn decode_image(file_path: &String) -> (Vec<Vec<f64>>, f64) {
     // Return vector of vector samples
     let mut samples: Vec<Vec<f64>> = vec![];
 
@@ -64,7 +64,8 @@ fn decode_image(file_path: &String) -> Vec<Vec<f64>> {
     // Get the default track.
     let track = format.default_track().unwrap();
     
-    println!("duration of the file: {}", get_duration(track));
+    let duration = get_duration(track);
+    println!("duration of the file: {}", duration);
 
     // Create a decoder for the track.
     let mut decoder = symphonia::default::get_codecs()
@@ -159,7 +160,7 @@ fn decode_image(file_path: &String) -> Vec<Vec<f64>> {
         min_len, max_len
     );
 
-    samples
+    (samples, duration)
 }
 
 use rustfft::{num_complex::Complex, FftPlanner};
@@ -237,8 +238,9 @@ fn main() {
     // Get command line arguments.
     let args: Vec<String> = env::args().collect();
 
-    let samples = decode_image(&args[1]);
+    let (samples, duration) = decode_image(&args[1]);
     println!("number of vectors of samples: {}", samples.len());
+    let mut sample_duration = duration / f64::from(samples.len() as u32);
 
     let mut spectrogram = transform_data(samples);
 
@@ -250,6 +252,7 @@ fn main() {
     // group and accumulate to better distinguish the signal from noise
     let group_size = 10usize;
     group_by(&mut spectrogram, group_size);
+    sample_duration *= f64::from(group_size as u32);
 
     // plot(total).unwrap();
     // gif_plots(spectrogram).unwrap();
@@ -257,9 +260,9 @@ fn main() {
     let frequencies = get_frequencies(&spectrogram);
     
     // example_usage();
-    let approximation = one_device_approximation(frequencies.clone());
-    plot(frequencies, Some(approximation), "Frequencies + approximation chart 4").unwrap();
-
+    let approximation = one_device_approximation(frequencies.clone(), sample_duration);
+    plot(frequencies, Some(approximation), "Frequencies + approximation chart 7").unwrap();
+    println!("tau0: {}", sample_duration);
     
     /* FFT tests
     let mut planner = FftPlanner::<f32>::new();

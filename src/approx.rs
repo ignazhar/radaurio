@@ -58,7 +58,27 @@ struct GetResult {
     error: Option<gomez::algo::trust_region::TrustRegionError>,
 }
 
-pub fn one_device_approximation(data: Vec<f64>) -> OneDeviceSolution {
+// impl GetResult {
+//     fn get_error(&self) -> Option<gomez::algo::trust_region::TrustRegionError> {
+//         gomez::algo::trust_region::TrustRegionError::
+//         self.error
+//         todo!()
+//     }
+// }
+
+// impl PartialOrd for GetResult {
+//     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+//         self.result.1.partial_cmp(&other.result.1)
+//     }
+// }
+
+// impl Ord for GetResult {
+//     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+//         self.result.1.total_cmp(&other.result.1)
+//     }
+// }
+
+pub fn one_device_approximation(data: Vec<f64>, sample_duration: f64) -> OneDeviceSolution {
     struct OneDeviceProblem {
         data: Vec<f64>,
         tau0: f64,
@@ -70,7 +90,7 @@ pub fn one_device_approximation(data: Vec<f64>) -> OneDeviceSolution {
 
         fn domain(&self) -> Domain<Self::Field> {
             // Domain::unconstrained(2)
-            Domain::rect(vec![-100000.0, -100000.0, -100000.0], vec![100000.0, 100000.0, 100000.0])
+            Domain::rect(vec![-100000.0, 0.0, -100000.0], vec![100000.0, 100000.0, 100000.0])
         }
     }
 
@@ -99,7 +119,7 @@ pub fn one_device_approximation(data: Vec<f64>) -> OneDeviceSolution {
 
             let mut result = 0.0;
             for (x, y) in self.data.iter().enumerate() {
-                result += (get_value(x as f64) - y).powi(2);
+                result += (get_value(x as f64 * tau0) - y).powi(2);
             }
             result
         }
@@ -114,7 +134,7 @@ pub fn one_device_approximation(data: Vec<f64>) -> OneDeviceSolution {
 
     let current_problem = OneDeviceProblem {
         data: data,
-        tau0: 1.0,
+        tau0: sample_duration,
     };
     let mut optimizer = OptimizerDriver::builder(&current_problem)
         .with_initial(vec![200.0, 40.0, 50.0])
@@ -122,6 +142,7 @@ pub fn one_device_approximation(data: Vec<f64>) -> OneDeviceSolution {
 
     fn find_return(optimizer: &mut OptimizerDriver<'_, OneDeviceProblem, gomez::algo::TrustRegion<OneDeviceProblem>>) -> GetResult {
         let mut last_state = GetResult { result: (optimizer.x().iter().cloned().collect(), optimizer.fx()), iter: 0, error: None };
+        // let mut best_state = last_state;
         loop {
             println!("last_state: {:?}", last_state);
             match optimizer.next() {
@@ -130,10 +151,16 @@ pub fn one_device_approximation(data: Vec<f64>) -> OneDeviceSolution {
                     break;
                 },
                 Ok(new_result) => {
-                    last_state.result = (new_result.0.iter().cloned().collect(), new_result.1);
-                    last_state.iter += 1;
+                    if new_result.1 < last_state.result.1 || true {
+                        last_state.result = (new_result.0.iter().cloned().collect(), new_result.1);
+                        last_state.iter += 1;
+                    }
                 }
             }
+            // TODO: implement using traits
+            // if last_state.result.1 < best_state.result.1 {
+            //     best_state = GetResult {result: last_state.result, iter: last_state.iter, error: match last_state.error { None => None, Some(e) => Some(e)} };
+            // }
             // conditions: TODO: implement more general
             if last_state.result.1 < 1e-6 || last_state.iter >= 100 {
                 break;
@@ -170,5 +197,5 @@ pub fn one_device_approximation(data: Vec<f64>) -> OneDeviceSolution {
 
     println!("{}", optimizer.name());
 
-    OneDeviceSolution { x0: result.result.0[0], d: result.result.0[1], v0: result.result.0[2], tau0: 1.0 }
+    OneDeviceSolution { x0: result.result.0[0], d: result.result.0[1], v0: result.result.0[2], tau0: sample_duration }
 }
