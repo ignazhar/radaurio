@@ -18,6 +18,21 @@ use crate::plot::{gif_plots, plot};
 // pub mod lma;
 pub mod approx;
 
+fn get_duration(track: &symphonia::core::formats::Track) -> f64 {
+    if track.codec_params.n_frames.is_none() {
+        panic!("No n_frames in the track.codec_params");
+    }
+    let n_frames = track.codec_params.n_frames.unwrap();
+    println!("Number of frames: {}", n_frames);
+    if track.codec_params.sample_rate.is_none() {
+        panic!("No sample_rate in the track.codec_params");   
+    }
+    let sample_rate = track.codec_params.sample_rate.unwrap();
+    let seconds = n_frames as f64 / sample_rate as f64;
+    println!("Duration (seconds): {:.2}", seconds);
+    seconds
+}
+
 fn decode_image(file_path: &String) -> Vec<Vec<f64>> {
     // Return vector of vector samples
     let mut samples: Vec<Vec<f64>> = vec![];
@@ -48,6 +63,8 @@ fn decode_image(file_path: &String) -> Vec<Vec<f64>> {
 
     // Get the default track.
     let track = format.default_track().unwrap();
+    
+    println!("duration of the file: {}", get_duration(track));
 
     // Create a decoder for the track.
     let mut decoder = symphonia::default::get_codecs()
@@ -209,6 +226,12 @@ fn get_frequencies(spectrogram: &Vec<Vec<f64>>) -> Vec<f64> {
     frequencies
 }
 
+pub struct OneDeviceSolution {
+    x0: f64,
+    v0: f64,
+    tau0: f64,
+}
+
 fn main() {
     // Get command line arguments.
     let args: Vec<String> = env::args().collect();
@@ -230,12 +253,13 @@ fn main() {
     // plot(total).unwrap();
     // gif_plots(spectrogram).unwrap();
 
-    let _frequencies = get_frequencies(&spectrogram);
-    // plot(frequencies, "Frequencies chart 1").unwrap();
-
+    let frequencies = get_frequencies(&spectrogram);
+    
     // example_usage();
-    one_device_approximation(_frequencies);
+    let approximation = one_device_approximation(frequencies.clone());
+    plot(frequencies, Some(approximation), "Frequencies + approximation chart 1").unwrap();
 
+    
     /* FFT tests
     let mut planner = FftPlanner::<f32>::new();
     let fft = planner.plan_fft_forward(8);
@@ -257,4 +281,5 @@ fn main() {
         println!("{:?}", complex_value);
     }
     */
+
 }

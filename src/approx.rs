@@ -2,6 +2,8 @@ use gomez::nalgebra as na;
 use gomez::{Domain, Function, OptimizerDriver, Problem};
 use na::{Dyn, IsContiguous};
 
+use crate::OneDeviceSolution;
+
 pub fn example_usage() -> () {
     // Objective function is represented by a struct.
     struct Rosenbrock {
@@ -50,13 +52,13 @@ const C: f64 = 343.0;
 // }
 
 #[derive(Debug)]
-struct GetResult<'a> {
-    result: (&'a[f64], f64),
+struct GetResult {
+    result: (Vec<f64>, f64),
     iter: u32,
     error: Option<gomez::algo::trust_region::TrustRegionError>,
 }
 
-pub fn one_device_approximation(data: Vec<f64>) -> () {
+pub fn one_device_approximation(data: Vec<f64>) -> OneDeviceSolution {
     struct OneDeviceProblem {
         data: Vec<f64>,
         tau0: f64,
@@ -67,7 +69,7 @@ pub fn one_device_approximation(data: Vec<f64>) -> () {
 
         fn domain(&self) -> Domain<Self::Field> {
             // Domain::unconstrained(2)
-            Domain::rect(vec![-100.0, -100.0], vec![100.0, 100.0])
+            Domain::rect(vec![-100.0, 0.0], vec![100.0, 100.0])
         }
     }
 
@@ -113,30 +115,32 @@ pub fn one_device_approximation(data: Vec<f64>) -> () {
         tau0: 1.0,
     };
     let mut optimizer = OptimizerDriver::builder(&current_problem)
-        .with_initial(vec![1.0, 5.0])
+        .with_initial(vec![200.0, 60.0])
         .build();
 
-
-    fn find_return<'a>(optimizer: &'a mut OptimizerDriver<'a, OneDeviceProblem, gomez::algo::TrustRegion<OneDeviceProblem>>) -> GetResult<'a> {
-        let mut last_state = GetResult { result: (optimizer.x(), optimizer.fx()), iter: 0, error: None };
+    fn find_return(optimizer: &mut OptimizerDriver<'_, OneDeviceProblem, gomez::algo::TrustRegion<OneDeviceProblem>>) -> GetResult {
+        let mut last_state = GetResult { result: (optimizer.x().iter().cloned().collect(), optimizer.fx()), iter: 0, error: None };
         loop {
+            println!("last_state: {:?}", last_state);
             match optimizer.next() {
                 Err(e) => {
                     last_state.error = Some(e);
                     break;
                 },
                 Ok(new_result) => {
-                    last_state.result = (new_result.0.clone(), new_result.1.clone());
+                    last_state.result = (new_result.0.iter().cloned().collect(), new_result.1);
                     last_state.iter += 1;
                 }
+            }
+            // conditions: TODO: implement more general
+            if last_state.result.1 < 1e-6 || last_state.iter >= 100 {
+                break;
             }
         }
         last_state
     }
 
-    let mut _last_x: &[f64] = &[];
-    let mut _last_fx = 3.424;
-    let result = optimizer
+    /*let result = optimizer
         .find(|state| {
             println!(
                 "it={} fx={} [x0, v0]={:?}",
@@ -150,15 +154,19 @@ pub fn one_device_approximation(data: Vec<f64>) -> () {
         });
         // .expect("optimizer error")
         // .inspect_err(|e| eprintln!("error: {e}"))
-
+    */
     
-    if let Err(e) = result {
-        eprintln!("error: {}", e);
-    } else {
-        let (x, fx) = result.unwrap();
-        println!("found best : {} at {:?}", fx, x);
-    }
+    // if let Err(e) = result {
+    //     eprintln!("error: {}", e);
+    // } else {
+    //     let (x, fx) = result.unwrap();
+    //     println!("found best : {} at {:?}", fx, x);
+    // }
+
+    let result = find_return(&mut optimizer);
+    println!("final result: {:?}", result);
 
     println!("{}", optimizer.name());
 
+    OneDeviceSolution { x0: result.result.0[0], v0: result.result.0[1], tau0: 1.0 }
 }

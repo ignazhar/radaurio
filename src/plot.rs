@@ -2,9 +2,23 @@ use std::io::Write;
 
 use plotters::prelude::*;
 
+use crate::OneDeviceSolution;
+
+fn get_value(model: &OneDeviceSolution, t: f64) -> f64 {
+    todo!()
+}
+
+fn build_approximation_graph(model: OneDeviceSolution, len: usize) -> Vec<f64> {
+    let mut graph = vec![];
+    for i in 0..len {
+        graph.push(get_value(&model, i as f64));
+    }
+    graph
+}
+
 // https://github.com/plotters-rs/plotters/blob/master/plotters/examples/area-chart.rs
-const OUT_FILE_NAME: &str = "plotters-doc-data/frequency-chart-try10.png";
-pub fn plot(data: Vec<f64>, caption: &str) -> Result<(), Box<dyn std::error::Error>> {
+const OUT_FILE_NAME: &str = "plotters-doc-data/frequency-chart-with-approx-1.png";
+pub fn plot(data: Vec<f64>, optional_model: Option<OneDeviceSolution>, caption: &str) -> Result<(), Box<dyn std::error::Error>> {
     let root = BitMapBackend::new(OUT_FILE_NAME, (1024, 768)).into_drawing_area();
 
     root.fill(&WHITE)?;
@@ -34,6 +48,10 @@ pub fn plot(data: Vec<f64>, caption: &str) -> Result<(), Box<dyn std::error::Err
         )
         .border_style(BLUE),
     )?;
+
+    if let Some(model) = optional_model {
+        todo!()
+    }
 
     // To avoid the IO failure being ignored silently, we manually call the present function
     root.present().expect("Unable to write result to file, please make sure 'plotters-doc-data' dir exists under current dir");
